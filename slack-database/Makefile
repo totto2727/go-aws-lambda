@@ -9,3 +9,12 @@ deploy:
 
 deploy-use-cache:
 	sam deploy
+
+test-to-slack-message-lambda:
+	sam build --use-container ToSlackMessageLambda
+	sam local invoke ToSlackMessageLambda
+
+test-get-twitter-list-tweet-lambda:
+	sam build --use-container GetTwitterListTweet
+	sam local invoke GetTwitterListTweet
+

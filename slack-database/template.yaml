@@ -26,12 +26,34 @@ Resources:
       Environment:
         Variables:
           BEARER: !Ref Bearer
-      Events:
-        Timer:
-          Type: Schedule
-          Properties:
-            Schedule: rate(10 minutes)
   GetTwitterListTweetIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        - arn:aws:iam::aws:policy/AWSStepFunctionsReadOnlyAccess
+  ToSlackMessageLambda:
+    Type: AWS::Serverless::Function
+    Role: !GetAtt ToSlackMessageLambdaIamRole.Arn
+    Properties:
+      CodeUri: to-slack-message-lambda/
+      Handler: to-slack-message-lambda
+      Runtime: go1.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 60
+  ToSlackMessageLambdaIamRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:

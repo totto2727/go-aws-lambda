@@ -1,0 +1,10 @@
+{
+    "StartAt": "get",
+    "States": {
+      "hello world": {
+        "Type": "Task",
+        "Resource": "${HelloWorldFunction}",
+        "End": true
+      }
+    }
+  }

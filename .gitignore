@@ -1,2 +1,5 @@
 .env.local
+env.json
 .aws-sam
+samconfig.toml
+slack-database-sqs.json

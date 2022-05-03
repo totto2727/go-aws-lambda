@@ -6,10 +6,16 @@ github.com/cpuguy83/go-md2man/v2 v2.0.0/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsr
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/g8rswimmer/go-twitter/v2 v2.0.0 h1:X7/RFta0RGgavSmeFqqFyBDqrMcM7zBTy/j0cxGRgU8=
+github.com/g8rswimmer/go-twitter/v2 v2.0.0/go.mod h1:/55xWb313KQs25X7oZrNSEwLQNkYHhPsDwFstc45vhc=
+github.com/michimani/gotwi v0.11.2 h1:eIZ4igLYSs4RP/oiGGW4SJVSJtiJQ68Sr4klnyzHbyE=
+github.com/michimani/gotwi v0.11.2/go.mod h1:2W7Xp7vgg7ZZFdwXYHwbr9gUCMaZc+ql+T8RpccbeQ4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
+github.com/sivchari/gotwtr v1.0.1 h1:cBd3ijWR+R0uMoHzP9+GRPqNbQU7yQMby3Ckb+eE0Mw=
+github.com/sivchari/gotwtr v1.0.1/go.mod h1:Fh5ysSUvNhCmRg5Cxa4GYHd8DuF/0votPhctE/t1ksk=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=

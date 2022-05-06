@@ -12,9 +12,34 @@ Parameters:
 Resources:
   ToSlackMessageSqs:
     Type: AWS::SQS::Queue
+    Properties:
+      ReceiveMessageWaitTimeSeconds: 20
+      VisibilityTimeout: 60
+      MessageRetentionPeriod: 86400
+      FifoQueue: true
+      ContentBasedDeduplication: true
+  ChannelDynamoDb:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+  MessageDynamoDb:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: channel
+          AttributeType: S
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: channel
+          KeyType: HASH
+        - AttributeName: id
+          KeyType: RANGE
   GetTwitterListTweet:
     Type: AWS::Serverless::Function
-    Role: !GetAtt GetTwitterListTweetIamRole.Arn
     Properties:
       CodeUri: get-twitter-list-tweet-lambda/
       Handler: get-twitter-list-tweet-lambda
@@ -26,25 +51,8 @@ Resources:
       Environment:
         Variables:
           BEARER: !Ref Bearer
-  GetTwitterListTweetIamRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/AWSStepFunctionsReadOnlyAccess
   ToSlackMessageLambda:
     Type: AWS::Serverless::Function
-    Role: !GetAtt ToSlackMessageLambdaIamRole.Arn
     Properties:
       CodeUri: to-slack-message-lambda/
       Handler: to-slack-message-lambda
@@ -53,19 +61,24 @@ Resources:
         - x86_64
       MemorySize: 128
       Timeout: 60
-  ToSlackMessageLambdaIamRole:
-    Type: AWS::IAM::Role
+  GetMessageStateFunction:
+    Type: AWS::Serverless::StateMachine
     Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/AWSStepFunctionsReadOnlyAccess
+      DefinitionUri: state-machine/getMessage.asl.yaml
+      DefinitionSubstitutions:
+        ToSlackMessageSqsUrl: !Ref ToSlackMessageSqs
+        DynamoDbPutItemArn: arn:aws:states:::dynamodb:putItem
+        DynamoDbUpdateItemArn: arn:aws:states:::dynamodb:updateItem
+        MessageDynamoDbTable: !Ref MessageDynamoDb
+        ChannelDynamoDbTable: !Ref ChannelDynamoDb
+        GetTwitterListTweetArn: !GetAtt GetTwitterListTweet.Arn
+        ToSlackMessageSqsArn: arn:aws:states:::sqs:sendMessage
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref MessageDynamoDb
+        - DynamoDBWritePolicy:
+            TableName: !Ref ChannelDynamoDb
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt ToSlackMessageSqs.QueueName
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GetTwitterListTweet

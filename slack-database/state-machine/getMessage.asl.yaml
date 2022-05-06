@@ -1,0 +1,74 @@
+Comment: get messages and save to dynamo and send to SQS
+StartAt: GetMessages
+States:
+    GetMessages:
+        Type: Task
+        Resource: '${GetTwitterListTweetArn}'
+        ResultPath: $.messages
+        Next: ExecuteMessageMap
+    ExecuteMessageMap:
+        Type: Map
+        InputPath: $.messages
+        ItemsPath: $.data
+        Parameters:
+            channel.$: $.channel
+            api.$: $.api
+            message.$: $$.Map.Item.Value
+        ResultPath: null
+        MaxConcurrency: 0
+        Iterator:
+            StartAt: SaveMessageToDynamoDb
+            States:
+                SaveMessageToDynamoDb:
+                    Type: Task
+                    Resource: '${DynamoDbPutItemArn}'
+                    Parameters:
+                        TableName: '${MessageDynamoDbTable}'
+                        Item:
+                            channel:
+                                S.$: $.channel
+                            id:
+                                S.$: $.message.id
+                            api:
+                                S.$: $.api
+                            user_name:
+                                S.$: $.message.user_name
+                            author_id:
+                                S.$: $.message.author_id
+                            created_at:
+                                S.$: $.message.created_at
+                            url:
+                                S.$: $.message.url
+                    ResultPath: null
+                    Next: SendToSlackMessageSqs
+                SendToSlackMessageSqs:
+                    Type: Task
+                    Resource: '${ToSlackMessageSqsArn}'
+                    Parameters:
+                        QueueUrl: '${ToSlackMessageSqsUrl}'
+                        MessageGroupId.$: $.channel
+                        MessageBody.$: $.message.url
+                        MessageAttributes:
+                            url:
+                                DataType: String
+                                StringValue.$: $.message.url
+                            channel:
+                                DataType: String
+                                StringValue.$: $.channel
+                    ResultPath: null
+                    End: true
+        Next: SaveToChannelDynamoDb
+    SaveToChannelDynamoDb:
+        Type: Task
+        InputPath: $.messages
+        Resource: '${DynamoDbUpdateItemArn}'
+        Parameters:
+            TableName: '${ChannelDynamoDbTable}'
+            Key:
+                id:
+                    S.$: $.channel
+            UpdateExpression: 'SET updated_at = :updated_at'
+            ExpressionAttributeValues:
+                ':updated_at':
+                    S.$: $.updated_at
+        End: true

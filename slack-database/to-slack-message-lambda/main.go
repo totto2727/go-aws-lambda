@@ -1,17 +1,19 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	"log"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 )
 
-func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	return events.APIGatewayProxyResponse{
-		Body:       fmt.Sprintln("hello"),
-		StatusCode: 200,
-	}, nil
+func handler(ctx context.Context, sqsEvent events.SQSEvent) error {
+	for _, m := range sqsEvent.Records {
+		log.Println(m.Body)
+	}
+
+	return nil
 }
 
 func main() {

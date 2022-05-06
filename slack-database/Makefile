@@ -12,7 +12,7 @@ deploy-use-cache:
 
 test-to-slack-message-lambda:
 	sam build --use-container ToSlackMessageLambda
-	sam local invoke ToSlackMessageLambda
+	sam local invoke -e to-slack-message-lambda/event.json ToSlackMessageLambda
 
 test-get-twitter-list-tweet-lambda:
 	sam build --use-container GetTwitterListTweet

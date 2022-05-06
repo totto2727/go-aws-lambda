@@ -1,18 +1,39 @@
 Comment: get messages and save to dynamo and send to SQS
-StartAt: GetMessages
+StartAt: GetTaskFromSqs
 States:
-    GetMessages:
+    GetTaskFromSqs:
+        Type: Pass
+        Parameters:
+            api: twitter-list
+            channel: la-priere
+            twitter_list: '1516932575876378625'
+            updated_at: '2022-05-04T15:06:20Z'
+        ResultPath: $.task
+        Next: ApiChoise
+    ApiChoise:
+        Type: Choice
+        Choices:
+            -
+                Variable: $.task.api
+                StringEquals: twitter-list
+                Next: GetTwitterList
+        Default: DefaultState
+    DefaultState:
+        Type: Fail
+        Cause: No Matches!
+    GetTwitterList:
         Type: Task
         Resource: '${GetTwitterListTweetArn}'
+        InputPath: $.task
         ResultPath: $.messages
         Next: ExecuteMessageMap
     ExecuteMessageMap:
         Type: Map
-        InputPath: $.messages
-        ItemsPath: $.data
+        InputPath: $
+        ItemsPath: $.messages.data
         Parameters:
-            channel.$: $.channel
-            api.$: $.api
+            channel.$: $.task.channel
+            api.$: $.task.api
             message.$: $$.Map.Item.Value
         ResultPath: null
         MaxConcurrency: 0
@@ -60,15 +81,15 @@ States:
         Next: SaveToChannelDynamoDb
     SaveToChannelDynamoDb:
         Type: Task
-        InputPath: $.messages
+        InputPath: $
         Resource: '${DynamoDbUpdateItemArn}'
         Parameters:
             TableName: '${ChannelDynamoDbTable}'
             Key:
                 id:
-                    S.$: $.channel
+                    S.$: $.task.channel
             UpdateExpression: 'SET updated_at = :updated_at'
             ExpressionAttributeValues:
                 ':updated_at':
-                    S.$: $.updated_at
+                    S.$: $.messages.updated_at
         End: true

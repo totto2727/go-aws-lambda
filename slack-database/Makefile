@@ -16,5 +16,5 @@ test-to-slack-message-lambda:
 
 test-get-twitter-list-tweet-lambda:
 	sam build --use-container GetTwitterListTweet
-	sam local invoke GetTwitterListTweet
+	sam local invoke GetTwitterListTweet -e get-twitter-list-tweet-lambda/event.json
 

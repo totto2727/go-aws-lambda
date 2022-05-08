@@ -113,12 +113,20 @@ func handler(ctx context.Context, event MyEvent) (Result, error) {
 		}
 	}
 
-	for i, j := 0, len(resultItems)-1; i < j; i, j = i+1, j-1 {
+	tweetCount := len(resultItems)
+	if tweetCount == 0 {
+		return Result{
+			MessageCount: tweetCount,
+			UpdatedAt:    event.UpdatedAt,
+			Data:         []ResultItem{},
+		}, nil
+	}
+
+	for i, j := 0, tweetCount-1; i < j; i, j = i+1, j-1 {
 		resultItems[i], resultItems[j] = resultItems[j], resultItems[i]
 	}
 
-	updatedAt := resultItems[len(resultItems)-1].CreatedAt
-	tweetCount := len(resultItems)
+	updatedAt := resultItems[tweetCount-1].CreatedAt
 	log.Printf("%s %s %d", event.UpdatedAt, updatedAt, tweetCount)
 	return Result{
 		MessageCount: tweetCount,

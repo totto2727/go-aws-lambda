@@ -1,14 +1,31 @@
 {
-    "SNS": {
-        "Type": "Notification",
-        "MessageId": "22b80b92-fdea-4c2c-8f9d-bdfb0c7bf324",
-        "TopicArn": "arn:aws:sns:us-west-2:123456789012:MyTopic",
-        "Subject": "My First Message",
-        "Message": "{\"updated_at\":\"2022-05-07T06:40:21Z\",\"channel\":\"la-priere\",\"twitter_list\":\"1516932575876378625\",\"max_results\":20,\"api\":\"twitter-list\"}",
-        "Timestamp": "2012-05-02T00:54:06.655Z",
-        "SignatureVersion": "1",
-        "Signature": "EXAMPLEw6JRN...",
-        "SigningCertURL": "https://sns.us-west-2.amazonaws.com/SimpleNotificationService-f3ecfb7224c7233fe7bb5f59f96de52f.pem",
-        "UnsubscribeURL": "https://sns.us-west-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:us-west-2:123456789012:MyTopic:c9135db0-26c4-47ec-8998-413945fb5a96"
-    }
+    "Records": [
+        {
+            "EventSource": "aws:sns",
+            "EventVersion": "1.0",
+            "EventSubscriptionArn": "arn:aws:sns:us-east-1::ExampleTopic",
+            "Sns": {
+                "Type": "Notification",
+                "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
+                "TopicArn": "arn:aws:sns:us-east-1:123456789012:ExampleTopic",
+                "Subject": "example subject",
+                "Message": "{\"updated_at\":\"2022-05-07T06:40:21Z\",\"channel\":\"la-priere\",\"twitter_list\":\"1516932575876378625\",\"max_results\":20,\"api\":\"twitter-list\"}",
+                "Timestamp": "1970-01-01T00:00:00.000Z",
+                "SignatureVersion": "1",
+                "Signature": "EXAMPLE",
+                "SigningCertUrl": "EXAMPLE",
+                "UnsubscribeUrl": "EXAMPLE",
+                "MessageAttributes": {
+                    "Test": {
+                        "Type": "String",
+                        "Value": "TestString"
+                    },
+                    "TestBinary": {
+                        "Type": "Binary",
+                        "Value": "TestBinary"
+                    }
+                }
+            }
+        }
+    ]
 }

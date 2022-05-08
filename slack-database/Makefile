@@ -18,3 +18,7 @@ test-get-twitter-list-tweet-lambda:
 	sam build --use-container GetTwitterListTweet
 	sam local invoke GetTwitterListTweet -e get-twitter-list-tweet-lambda/event.json
 
+test-launch-get-message-state-machine-lambda:
+	sam build --use-container LaunchGetMessageStateMachineLambda
+	sam local invoke LaunchGetMessageStateMachineLambda -e launch-get-message-state-machine-lambda/event.json
+

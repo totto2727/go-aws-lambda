@@ -10,20 +10,10 @@ Parameters:
     Type: String
 
 Resources:
-  MessageSqs:
-    Type: AWS::SQS::Queue
-    Properties:
-      ReceiveMessageWaitTimeSeconds: 20
-      VisibilityTimeout: 60
-      MessageRetentionPeriod: 86400
-      FifoQueue: true
-      ContentBasedDeduplication: true
   GetMessagesTaskSnsTopic:
     Type: AWS::SNS::Topic
-    Properties:
-      TopicName: GetMessagesTaskSnsTopic.fifo
-      FifoTopic: true
-      ContentBasedDeduplication: true
+  SendMessageTaskSnsTopic:
+    Type: AWS::SNS::Topic
   ChannelDynamoDb:
     Type: AWS::Serverless::SimpleTable
     Properties:
@@ -74,6 +64,11 @@ Resources:
       DefinitionSubstitutions:
         ChannelDynamoDbTable: !Ref ChannelDynamoDb
         GetMessagesTaskSnsTopicArn: !Ref GetMessagesTaskSnsTopic
+      Events:
+        CronEvent:
+          Type: Schedule
+          Properties:
+            Schedule: "rate(15 minutes)"
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref ChannelDynamoDb
@@ -92,15 +87,20 @@ Resources:
       Environment:
         Variables:
           STEP_FUNCTION_ARN: !GetAtt GetMessageStateMachine.Arn
+      Events:
+        SnsEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref GetMessagesTaskSnsTopic
       Policies:
         - StepFunctionsExecutionPolicy:
             StateMachineName: !GetAtt GetMessageStateMachine.Name
   GetMessageStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
-      DefinitionUri: state-machine/getMessage.asl.yaml
+      DefinitionUri: state-machine/GetMessage.asl.yaml
       DefinitionSubstitutions:
-        MessageSqsUrl: !Ref MessageSqs
+        SendMessageTaskSnsTopicArn: !Ref SendMessageTaskSnsTopic
         MessageDynamoDbTable: !Ref MessageDynamoDb
         ChannelDynamoDbTable: !Ref ChannelDynamoDb
         GetTwitterListTweetArn: !GetAtt GetTwitterListTweet.Arn
@@ -109,7 +109,7 @@ Resources:
             TableName: !Ref MessageDynamoDb
         - DynamoDBWritePolicy:
             TableName: !Ref ChannelDynamoDb
-        - SQSSendMessagePolicy:
-            QueueName: !GetAtt MessageSqs.QueueName
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt SendMessageTaskSnsTopic.TopicName
         - LambdaInvokePolicy:
             FunctionName: !Ref GetTwitterListTweet

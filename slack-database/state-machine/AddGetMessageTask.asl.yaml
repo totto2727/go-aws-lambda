@@ -38,5 +38,4 @@ States:
                     Parameters:
                         TopicArn: '${GetMessagesTaskSnsTopicArn}'
                         Message.$: $
-                        MessageGroupId.$: $.channel
                     End: true

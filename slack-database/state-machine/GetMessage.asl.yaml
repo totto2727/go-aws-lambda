@@ -3,16 +3,12 @@ StartAt: GetTaskFromSqs
 States:
     GetTaskFromSqs:
         Type: Pass
-        Parameters:
-            api: twitter-list
-            channel: la-priere
-            twitter_list: '1516932575876378625'
-            updated_at: '2022-05-06T15:06:20Z'
-            max_results: 20
+        InputPath: $
         ResultPath: $.task
-        Next: ApiChoise
-    ApiChoise:
+        Next: ExecuteApiChoise
+    ExecuteApiChoise:
         Type: Choice
+        InputPath: $
         Choices:
             -
                 Variable: $.task.api
@@ -27,17 +23,28 @@ States:
         Resource: '${GetTwitterListTweetArn}'
         InputPath: $.task
         ResultPath: $.messages
-        Next: ExecuteMessageMap
+        Next: ExecuteIsEmptyChoice
+    ExecuteIsEmptyChoice:
+        Type: Choice
+        InputPath: $
+        Default: ExecuteMessageMap
+        Choices:
+            -
+                Variable: $.messages.message_count
+                NumericEquals: 0
+                Next: EmptySuceed
+    EmptySuceed:
+        Type: Succeed
     ExecuteMessageMap:
         Type: Map
-        Next: SendToMessageSqs
+        Next: SaveToChannelDynamoDb
         InputPath: $
         ItemsPath: $.messages.data
         Parameters:
             channel.$: $.task.channel
             api.$: $.task.api
             message.$: $$.Map.Item.Value
-        ResultPath: $.urls
+        ResultPath: null
         MaxConcurrency: 0
         Iterator:
             StartAt: SaveMessageToDynamoDb
@@ -45,6 +52,8 @@ States:
                 SaveMessageToDynamoDb:
                     Type: Task
                     Resource: 'arn:aws:states:::dynamodb:putItem'
+                    Next: PublishSendMessageTaskSnsTopic
+                    ResultPath: null
                     Parameters:
                         TableName: '${MessageDynamoDbTable}'
                         Item:
@@ -62,30 +71,22 @@ States:
                                 S.$: $.message.created_at
                             url:
                                 S.$: $.message.url
-                    ResultPath: null
-                    Next: PassUrl
-                PassUrl:
-                    Type: Pass
-                    InputPath: $.message.url
+                PublishSendMessageTaskSnsTopic:
+                    Type: Task
+                    Resource: 'arn:aws:states:::sns:publish'
+                    Parameters:
+                        TopicArn: '${SendMessageTaskSnsTopicArn}'
+                        Message.$: $.message.url
+                        MessageAttributes:
+                            channel:
+                                DataType: String
+                                StringValue.$: $.channel
                     End: true
-    SendToMessageSqs:
-        Type: Task
-        InputPath: $
-        Resource: 'arn:aws:states:::sqs:sendMessage'
-        Parameters:
-            QueueUrl: '${MessageSqsUrl}'
-            MessageGroupId.$: $.task.channel
-            MessageBody.$: $.urls
-            MessageAttributes:
-                channel:
-                    DataType: String
-                    StringValue.$: $.task.channel
-        ResultPath: null
-        Next: SaveToChannelDynamoDb
     SaveToChannelDynamoDb:
         Type: Task
-        InputPath: $
         Resource: 'arn:aws:states:::dynamodb:updateItem'
+        End: true
+        InputPath: $
         Parameters:
             TableName: '${ChannelDynamoDbTable}'
             Key:
@@ -95,4 +96,3 @@ States:
             ExpressionAttributeValues:
                 ':updated_at':
                     S.$: $.messages.updated_at
-        End: true

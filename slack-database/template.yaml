@@ -10,13 +10,19 @@ Parameters:
     Type: String
 
 Resources:
-  ToSlackMessageSqs:
+  MessageSqs:
     Type: AWS::SQS::Queue
     Properties:
       ReceiveMessageWaitTimeSeconds: 20
       VisibilityTimeout: 60
       MessageRetentionPeriod: 86400
       FifoQueue: true
+      ContentBasedDeduplication: true
+  GetMessagesTaskSnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: GetMessagesTaskSnsTopic.fifo
+      FifoTopic: true
       ContentBasedDeduplication: true
   ChannelDynamoDb:
     Type: AWS::Serverless::SimpleTable
@@ -61,24 +67,49 @@ Resources:
         - x86_64
       MemorySize: 128
       Timeout: 60
-  GetMessageStateFunction:
+  AddGetMessagesTaskStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: state-machine/AddGetMessageTask.asl.yaml
+      DefinitionSubstitutions:
+        ChannelDynamoDbTable: !Ref ChannelDynamoDb
+        GetMessagesTaskSnsTopicArn: !Ref GetMessagesTaskSnsTopic
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ChannelDynamoDb
+        - SNSPublishMessagePolicy:
+            TopicName: !GetAtt GetMessagesTaskSnsTopic.TopicName
+  LaunchGetMessageStateMachineLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: launch-get-message-state-machine-lambda/
+      Handler: launch-get-message-state-machine-lambda
+      Runtime: go1.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 60
+      Environment:
+        Variables:
+          STEP_FUNCTION_ARN: !GetAtt GetMessageStateMachine.Arn
+      Policies:
+        - StepFunctionsExecutionPolicy:
+            StateMachineName: !GetAtt GetMessageStateMachine.Name
+  GetMessageStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
       DefinitionUri: state-machine/getMessage.asl.yaml
       DefinitionSubstitutions:
-        ToSlackMessageSqsUrl: !Ref ToSlackMessageSqs
-        DynamoDbPutItemArn: arn:aws:states:::dynamodb:putItem
-        DynamoDbUpdateItemArn: arn:aws:states:::dynamodb:updateItem
+        MessageSqsUrl: !Ref MessageSqs
         MessageDynamoDbTable: !Ref MessageDynamoDb
         ChannelDynamoDbTable: !Ref ChannelDynamoDb
         GetTwitterListTweetArn: !GetAtt GetTwitterListTweet.Arn
-        ToSlackMessageSqsArn: arn:aws:states:::sqs:sendMessage
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref MessageDynamoDb
         - DynamoDBWritePolicy:
             TableName: !Ref ChannelDynamoDb
         - SQSSendMessagePolicy:
-            QueueName: !GetAtt ToSlackMessageSqs.QueueName
+            QueueName: !GetAtt MessageSqs.QueueName
         - LambdaInvokePolicy:
             FunctionName: !Ref GetTwitterListTweet

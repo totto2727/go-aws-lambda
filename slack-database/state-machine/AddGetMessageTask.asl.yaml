@@ -1,0 +1,42 @@
+Comment: get channel and launch GetMessageStateMachine
+StartAt: ExecuteGetChannelParallel
+States:
+    ExecuteGetChannelParallel:
+        Type: Parallel
+        Next: ExecuteChannelMap
+        Branches:
+            -
+                StartAt: LaPriere
+                States:
+                    LaPriere:
+                        Type: Task
+                        Resource: 'arn:aws:states:::dynamodb:getItem'
+                        Parameters:
+                            TableName: '${ChannelDynamoDbTable}'
+                            Key:
+                                id: la-priere
+                        OutputPath: $.Item
+                        Next: Pass
+                    Pass:
+                        Type: Pass
+                        Parameters:
+                            api.$: $.api.S
+                            channel.$: $.id.S
+                            twitter_list.$: $.twitter_list.S
+                            updated_at.$: $.updated_at.S
+                            max_results.$: $.max_results.N
+                        End: true
+    ExecuteChannelMap:
+        Type: Map
+        End: true
+        Iterator:
+            StartAt: PublishGetMessagesTaskSnsTopic
+            States:
+                PublishGetMessagesTaskSnsTopic:
+                    Type: Task
+                    Resource: 'arn:aws:states:::sns:publish'
+                    Parameters:
+                        TopicArn: '${GetMessagesTaskSnsTopicArn}'
+                        Message.$: $
+                        MessageGroupId.$: $.channel
+                    End: true

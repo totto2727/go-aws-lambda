@@ -19,6 +19,7 @@ var (
 type MyEvent struct {
 	TwitterList string `json:"twitter_list"`
 	UpdatedAt   string `json:"updated_at"`
+	MaxResults  int    `json:"max_results"`
 }
 
 type ResultItem struct {
@@ -30,9 +31,9 @@ type ResultItem struct {
 }
 
 type Result struct {
-	Data        []ResultItem `json:"data"`
+	Data         []ResultItem `json:"data"`
 	MessageCount int          `json:"message_count"`
-	UpdatedAt   string       `json:"updated_at"`
+	UpdatedAt    string       `json:"updated_at"`
 }
 
 func handler(ctx context.Context, event MyEvent) (Result, error) {
@@ -49,7 +50,7 @@ func handler(ctx context.Context, event MyEvent) (Result, error) {
 		}
 		return client.LookUpListTweets(context.Background(), event.TwitterList, &gotwtr.ListTweetsOption{
 			PaginationToken: paginationToken_,
-			MaxResults:      20,
+			MaxResults:      event.MaxResults,
 			Expansions:      []gotwtr.Expansion{gotwtr.ExpansionAuthorID},
 			TweetFields:     []gotwtr.TweetField{gotwtr.TweetFieldCreatedAt},
 		})
@@ -121,8 +122,8 @@ func handler(ctx context.Context, event MyEvent) (Result, error) {
 	log.Printf("%s %s %d", event.UpdatedAt, updatedAt, tweetCount)
 	return Result{
 		MessageCount: tweetCount,
-		UpdatedAt:   updatedAt,
-		Data:        resultItems,
+		UpdatedAt:    updatedAt,
+		Data:         resultItems,
 	}, nil
 }
 

@@ -7,7 +7,8 @@ States:
             api: twitter-list
             channel: la-priere
             twitter_list: '1516932575876378625'
-            updated_at: '2022-05-04T15:06:20Z'
+            updated_at: '2022-05-06T15:06:20Z'
+            max_results: 20
         ResultPath: $.task
         Next: ApiChoise
     ApiChoise:
@@ -29,20 +30,21 @@ States:
         Next: ExecuteMessageMap
     ExecuteMessageMap:
         Type: Map
+        Next: SendToMessageSqs
         InputPath: $
         ItemsPath: $.messages.data
         Parameters:
             channel.$: $.task.channel
             api.$: $.task.api
             message.$: $$.Map.Item.Value
-        ResultPath: null
+        ResultPath: $.urls
         MaxConcurrency: 0
         Iterator:
             StartAt: SaveMessageToDynamoDb
             States:
                 SaveMessageToDynamoDb:
                     Type: Task
-                    Resource: '${DynamoDbPutItemArn}'
+                    Resource: 'arn:aws:states:::dynamodb:putItem'
                     Parameters:
                         TableName: '${MessageDynamoDbTable}'
                         Item:
@@ -61,28 +63,29 @@ States:
                             url:
                                 S.$: $.message.url
                     ResultPath: null
-                    Next: SendToSlackMessageSqs
-                SendToSlackMessageSqs:
-                    Type: Task
-                    Resource: '${ToSlackMessageSqsArn}'
-                    Parameters:
-                        QueueUrl: '${ToSlackMessageSqsUrl}'
-                        MessageGroupId.$: $.channel
-                        MessageBody.$: $.message.url
-                        MessageAttributes:
-                            url:
-                                DataType: String
-                                StringValue.$: $.message.url
-                            channel:
-                                DataType: String
-                                StringValue.$: $.channel
-                    ResultPath: null
+                    Next: PassUrl
+                PassUrl:
+                    Type: Pass
+                    InputPath: $.message.url
                     End: true
+    SendToMessageSqs:
+        Type: Task
+        InputPath: $
+        Resource: 'arn:aws:states:::sqs:sendMessage'
+        Parameters:
+            QueueUrl: '${MessageSqsUrl}'
+            MessageGroupId.$: $.task.channel
+            MessageBody.$: $.urls
+            MessageAttributes:
+                channel:
+                    DataType: String
+                    StringValue.$: $.task.channel
+        ResultPath: null
         Next: SaveToChannelDynamoDb
     SaveToChannelDynamoDb:
         Type: Task
         InputPath: $
-        Resource: '${DynamoDbUpdateItemArn}'
+        Resource: 'arn:aws:states:::dynamodb:updateItem'
         Parameters:
             TableName: '${ChannelDynamoDbTable}'
             Key:

@@ -22,6 +22,7 @@ States:
                         Parameters:
                             api.$: $.api.S
                             channel.$: $.id.S
+                            url.$: $.url.S
                             twitter_list.$: $.twitter_list.S
                             updated_at.$: $.updated_at.S
                             max_results.$: $.max_results.N

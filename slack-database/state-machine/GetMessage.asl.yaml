@@ -1,17 +1,12 @@
 Comment: get messages and save to dynamo and send to SQS
-StartAt: GetTaskFromSqs
+StartAt: ExecuteApiChoise
 States:
-    GetTaskFromSqs:
-        Type: Pass
-        InputPath: $
-        ResultPath: $.task
-        Next: ExecuteApiChoise
     ExecuteApiChoise:
         Type: Choice
         InputPath: $
         Choices:
             -
-                Variable: $.task.api
+                Variable: $.api
                 StringEquals: twitter-list
                 Next: GetTwitterList
         Default: DefaultState
@@ -21,7 +16,7 @@ States:
     GetTwitterList:
         Type: Task
         Resource: '${GetTwitterListTweetArn}'
-        InputPath: $.task
+        InputPath: $
         ResultPath: $.messages
         Next: ExecuteIsEmptyChoice
     ExecuteIsEmptyChoice:
@@ -41,8 +36,9 @@ States:
         InputPath: $
         ItemsPath: $.messages.data
         Parameters:
-            channel.$: $.task.channel
-            api.$: $.task.api
+            channel.$: $.channel
+            api.$: $.api
+            url.$: $.url
             message.$: $$.Map.Item.Value
         ResultPath: null
         MaxConcurrency: 0
@@ -80,7 +76,10 @@ States:
                         MessageAttributes:
                             channel:
                                 DataType: String
-                                StringValue.$: $.channel
+                                StringValue.$: $.url
+                            created_at:
+                                DataType: String
+                                StringValue.$: $.message.created_at
                     End: true
     SaveToChannelDynamoDb:
         Type: Task
@@ -91,7 +90,7 @@ States:
             TableName: '${ChannelDynamoDbTable}'
             Key:
                 id:
-                    S.$: $.task.channel
+                    S.$: $.channel
             UpdateExpression: 'SET updated_at = :updated_at'
             ExpressionAttributeValues:
                 ':updated_at':

@@ -18,6 +18,7 @@ type MyEvent struct {
 	TwitterList string      `json:"twitter_list"`
 	UpdatedAt   string      `json:"updated_at"`
 	MaxResults  json.Number `json:"max_results"`
+	URL         string      `json:"url"`
 }
 
 func handler(ctx context.Context, event events.SNSEvent) {

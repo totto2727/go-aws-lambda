@@ -1,23 +1,31 @@
 {
     "Records": [
         {
-            "messageId": "必須",
-            "receiptHandle": "必須・最新の受信家を確かめるためのハッシュ",
-            "body": "1521288191386730496",
-            "attributes": {
-                "ApproximateReceiveCount": "1",
-                "SentTimestamp": "1573251510774",
-                "SequenceNumber": "18849496460467696128",
-                "MessageGroupId": "1",
-                "SenderId": "AIDAIO23YVJENQZJOL4VO",
-                "MessageDeduplicationId": "1",
-                "ApproximateFirstReceiveTimestamp": "1573251510774"
-            },
-            "messageAttributes": {},
-            "md5OfBody": "e4e68fb7bd0e697a0ae8f1bb342846b3",
-            "eventSource": "aws:sqs",
-            "eventSourceARN": "arn:aws:sqs:us-east-2:123456789012:fifo.fifo",
-            "awsRegion": "us-east-2"
+            "EventSource": "aws:sns",
+            "EventVersion": "1.0",
+            "EventSubscriptionArn": "arn:aws:sns:us-east-1::ExampleTopic",
+            "Sns": {
+                "Type": "Notification",
+                "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
+                "TopicArn": "arn:aws:sns:us-east-1:123456789012:ExampleTopic",
+                "Subject": "example subject",
+                "Message": "https://twitter.com/itsukinatsume/status/1522554179235254272",
+                "Timestamp": "1970-01-01T00:00:00.000Z",
+                "SignatureVersion": "1",
+                "Signature": "EXAMPLE",
+                "SigningCertUrl": "EXAMPLE",
+                "UnsubscribeUrl": "EXAMPLE",
+                "MessageAttributes": {
+                    "channel": {
+                        "Type": "String",
+                        "Value": "https://tottohq.slack.com/archives/C03BVNQD6T1"
+                    },
+                    "TestBinary": {
+                        "Type": "Binary",
+                        "Value": "TestBinary"
+                    }
+                }
+            }
         }
     ]
 }

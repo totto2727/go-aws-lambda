@@ -8,6 +8,8 @@ Description: >
 Parameters:
   Bearer:
     Type: String
+  SlackApi:
+    Type: String
 
 Resources:
   GetMessagesTaskSnsTopic:
@@ -57,6 +59,14 @@ Resources:
         - x86_64
       MemorySize: 128
       Timeout: 60
+      Environment:
+        Variables:
+          SLACK_API: !Ref SlackApi
+      Events:
+        SnsEvent:
+          Type: SNS
+          Properties:
+            Topic: !Ref SendMessageTaskSnsTopic
   AddGetMessagesTaskStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:

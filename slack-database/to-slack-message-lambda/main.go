@@ -12,7 +12,6 @@ import (
 )
 
 func handler(ctx context.Context, event events.SNSEvent) error {
-	// api := slack.New("xoxb-3418363110098-3531646072144-GtfEcRR5WdoSObHRIn8COeE0")
 	api := slack.New(os.Getenv("SLACK_API"))
 
 	for _, m := range event.Records {
